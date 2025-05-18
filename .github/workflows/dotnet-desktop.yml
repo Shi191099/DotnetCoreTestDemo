@@ -1,54 +1,83 @@
-# === ACTIVE WORKFLOW FOR LINUX DEPLOYMENT ===
-
-name: Build and Deploy .NET App to Linux Server
+name: Build Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
-  build-and-deploy:
+  build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '8.0.x'
+    - name: Install dependencies
+      run: dotnet restore
+      # working-directory: ./src
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+      # working-directory: ./src
+    - name: Run Unit Tests
+      run: dotnet test --configuration Release --no-restore --verbosity minimal --filter UnitTests
+      # working-directory: ./src
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
+# # === ACTIVE WORKFLOW FOR LINUX DEPLOYMENT ===
 
-      - name: Restore dependencies
-        run: dotnet restore
-        working-directory: ExternalUserService
+# name: Build and Deploy .NET App to Linux Server
 
-      - name: Build project
-        run: dotnet build --configuration Release
-        working-directory: ExternalUserService
+# on:
+#   push:
+#     branches:
+#       - main
 
-      - name: Publish project
-        run: dotnet publish -c Release -o ./publish
-        working-directory: ExternalUserService
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
 
-      - name: Copy files to Linux server via SCP
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.LINUX_SERVER_HOST }}
-          username: ${{ secrets.LINUX_SERVER_USER }}
-          key: ${{ secrets.LINUX_SERVER_SSH_KEY }}
-          source: "ExternalUserService/publish/*"
-          target: "/var/www/my-dotnet-app"
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
 
-      - name: Restart service on Linux server via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.LINUX_SERVER_HOST }}
-          username: ${{ secrets.LINUX_SERVER_USER }}
-          key: ${{ secrets.LINUX_SERVER_SSH_KEY }}
-          script: |
-            sudo systemctl restart my-dotnet-app.service
+#       - name: Setup .NET SDK
+#         uses: actions/setup-dotnet@v3
+#         with:
+#           dotnet-version: '8.0.x'
+
+#       - name: Restore dependencies
+#         run: dotnet restore
+#         working-directory: ExternalUserService
+
+#       - name: Build project
+#         run: dotnet build --configuration Release
+#         working-directory: ExternalUserService
+
+#       - name: Publish project
+#         run: dotnet publish -c Release -o ./publish
+#         working-directory: ExternalUserService
+
+#       - name: Copy files to Linux server via SCP
+#         uses: appleboy/scp-action@v0.1.4
+#         with:
+#           host: ${{ secrets.LINUX_SERVER_HOST }}
+#           username: ${{ secrets.LINUX_SERVER_USER }}
+#           key: ${{ secrets.LINUX_SERVER_SSH_KEY }}
+#           source: "ExternalUserService/publish/*"
+#           target: "/var/www/my-dotnet-app"
+
+#       - name: Restart service on Linux server via SSH
+#         uses: appleboy/ssh-action@v1.0.0
+#         with:
+#           host: ${{ secrets.LINUX_SERVER_HOST }}
+#           username: ${{ secrets.LINUX_SERVER_USER }}
+#           key: ${{ secrets.LINUX_SERVER_SSH_KEY }}
+#           script: |
+#             sudo systemctl restart my-dotnet-app.service
 
 
 # This workflow uses actions that are not certified by GitHub.
