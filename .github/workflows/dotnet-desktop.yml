@@ -138,6 +138,7 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+        working-directory: ExternalUserService
 
       - name: Build project
         run: dotnet build --configuration Release
