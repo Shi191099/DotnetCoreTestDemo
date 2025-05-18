@@ -142,9 +142,11 @@ jobs:
 
       - name: Build project
         run: dotnet build --configuration Release
+        working-directory: ExternalUserService
 
       - name: Publish project
         run: dotnet publish -c Release -o ./publish
+        working-directory: ExternalUserService
 
       - name: Copy files to Linux server via SCP
         uses: appleboy/scp-action@v0.1.4
